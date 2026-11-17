@@ -1,26 +1,17 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { api, formatMoney, type Order } from "@/lib/api";
+import { api, type Order } from "@/lib/api";
+import { formatDate, formatMoney, sellerLabel } from "@/lib/format";
 import { useAuth } from "@/lib/auth";
-import { EmptyState, ErrorState, LoadingState } from "@/components/StateMessage";
-
-function statusBadgeClass(status: string): string {
-  switch (status) {
-    case "shipped":
-      return "text-bg-success";
-    case "partially_shipped":
-      return "text-bg-info";
-    default:
-      return "text-bg-secondary";
-  }
-}
-
-function formatDate(value?: string): string {
-  if (!value) return "";
-  return new Date(value).toLocaleString();
-}
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  StatusBadge,
+  SurfaceCard,
+} from "@/components/ui";
 
 function OrdersContent() {
   const { user, loading: authLoading } = useAuth();
@@ -28,6 +19,7 @@ function OrdersContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
   const created = searchParams.get("created");
 
   useEffect(() => {
@@ -44,7 +36,8 @@ function OrdersContent() {
         const data = await api<{ orders: Order[] }>("/orders");
         if (!cancelled) setOrders(data.orders);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -53,66 +46,77 @@ function OrdersContent() {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading]);
+  }, [user, authLoading, reloadToken]);
 
-  if (authLoading || loading) return <LoadingState />;
+  if (authLoading || loading) return <LoadingState label="Loading orders…" />;
   if (!user || user.role !== "buyer") {
-    return <EmptyState label="Log in as a buyer to view order history." />;
+    return (
+      <EmptyState
+        title="Buyer login required"
+        description="Log in as a buyer to view order history."
+        actionHref="/login"
+        actionLabel="Log in"
+      />
+    );
   }
-  if (error) return <ErrorState message={error} />;
+  if (error) {
+    return (
+      <ErrorState message={error} onRetry={() => setReloadToken((n) => n + 1)} />
+    );
+  }
 
   return (
     <div>
-      <h1 className="h3 mb-3">Your orders</h1>
+      <h1 className="page-title">Your orders</h1>
       {created && (
-        <div className="alert alert-success">
+        <div className="alert alert-success border-0 shadow-sm">
           Checkout complete — created {created} order(s).
         </div>
       )}
       {orders.length === 0 ? (
-        <EmptyState label="No orders yet." />
+        <EmptyState
+          title="No orders yet"
+          description="When you check out, each seller gets their own order."
+          actionHref="/"
+          actionLabel="Browse catalog"
+        />
       ) : (
-        <div className="vstack gap-3">
+        <div className="vstack gap-0">
           {orders.map((order) => (
-            <div className="card shadow-sm" key={order.id}>
-              <div className="card-body">
-                <div className="d-flex justify-content-between flex-wrap gap-2">
-                  <div>
-                    <h2 className="h6 mb-1">
-                      Order #{order.id}{" "}
-                      <span className={`badge ${statusBadgeClass(order.status)}`}>
-                        {order.status.replaceAll("_", " ")}
-                      </span>
-                    </h2>
-                    <div className="small text-muted">
-                      {order.seller?.store_name}
-                      {order.created_at ? ` · ${formatDate(order.created_at)}` : ""}
-                    </div>
-                  </div>
-                  <div className="text-end small">
-                    <div className="fw-semibold">
-                      Total {formatMoney(order.subtotal_cents)}
-                    </div>
+            <SurfaceCard className="order-card p-4" key={order.id}>
+              <div className="d-flex justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                  <h2 className="h5 mb-2">
+                    Order #{order.id}{" "}
+                    <StatusBadge status={order.status} />
+                  </h2>
+                  <div className="small text-muted">
+                    {sellerLabel(order.seller)}
+                    {order.created_at ? ` · ${formatDate(order.created_at)}` : ""}
                   </div>
                 </div>
-                <ul className="list-group list-group-flush mt-3">
-                  {order.items.map((item) => (
-                    <li
-                      className="list-group-item px-0 d-flex justify-content-between"
-                      key={item.id}
-                    >
-                      <span>
-                        {item.title} × {item.quantity}
-                        {item.shipped && (
-                          <span className="badge text-bg-success ms-2">Shipped</span>
-                        )}
-                      </span>
-                      <span>{formatMoney(item.unit_price_cents * item.quantity)}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="text-end">
+                  <div className="fw-bold">{formatMoney(order.subtotal_cents)}</div>
+                  <div className="small text-muted">Order total</div>
+                </div>
               </div>
-            </div>
+              <ul className="list-group list-group-flush">
+                {order.items.map((item) => (
+                  <li
+                    className="list-group-item px-0 d-flex justify-content-between gap-2"
+                    key={item.id}
+                  >
+                    <span>
+                      {item.title} × {item.quantity}{" "}
+                      {item.shipped && <StatusBadge status="shipped" />}
+                    </span>
+                    <span>
+                      {formatMoney(item.unit_price_cents * item.quantity)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </SurfaceCard>
           ))}
         </div>
       )}

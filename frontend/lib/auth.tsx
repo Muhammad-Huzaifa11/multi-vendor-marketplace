@@ -14,8 +14,9 @@ type AuthState = {
   user: User | null;
   loading: boolean;
   refresh: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (options?: { redirectTo?: string }) => Promise<void>;
 };
+
 
 const AuthContext = createContext<AuthState | null>(null);
 
@@ -38,10 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (options?: { redirectTo?: string }) => {
     await api("/logout", { method: "DELETE" });
+    // Hard redirect avoids a one-frame flash of protected EmptyStates
+    // (seller/buyer gates) before soft navigation unmounts the page.
+    if (options?.redirectTo) {
+      window.location.assign(options.redirectTo);
+      return;
+    }
     setUser(null);
   }, []);
+
 
   return (
     <AuthContext.Provider value={{ user, loading, refresh, logout }}>

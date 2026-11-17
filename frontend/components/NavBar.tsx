@@ -1,18 +1,54 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { readCart } from "@/lib/cart";
 import { Button } from "@/components/ui";
 
+function CartLink({
+  cartCount,
+  onClick,
+  className = "",
+}: {
+  cartCount: number;
+  onClick?: () => void;
+  className?: string;
+}) {
+  return (
+    <Link
+      className={`nav-link cart-link ${className}`.trim()}
+      href="/cart"
+      onClick={onClick}
+      aria-label={`Cart, ${cartCount} items`}
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H2"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="9" cy="20" r="1.2" fill="currentColor" />
+        <circle cx="18" cy="20" r="1.2" fill="currentColor" />
+      </svg>
+      <span className="cart-link__label">Cart</span>
+      {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+    </Link>
+  );
+}
+
 export default function NavBar() {
-  const router = useRouter();
   const { user, loading, logout } = useAuth();
   const [cartCount, setCartCount] = useState(0);
   const [open, setOpen] = useState(false);
-
 
   useEffect(() => {
     const sync = () =>
@@ -33,21 +69,26 @@ export default function NavBar() {
   return (
     <header className="site-header">
       <nav className="navbar navbar-expand-lg">
-        <div className="container">
+        <div className="container navbar-inner">
           <Link className="navbar-brand" href="/" onClick={closeMenu}>
             Marketplace
           </Link>
 
-          <button
-            className="navbar-toggler"
-            type="button"
-            aria-controls="mainNav"
-            aria-expanded={open}
-            aria-label="Toggle navigation"
-            onClick={() => setOpen((v) => !v)}
-          >
-            <span className="navbar-toggler-icon" />
-          </button>
+          <div className="navbar-mobile-actions">
+            {user?.role === "buyer" && (
+              <CartLink cartCount={cartCount} className="cart-link--mobile" />
+            )}
+            <button
+              className="navbar-toggler"
+              type="button"
+              aria-controls="mainNav"
+              aria-expanded={open}
+              aria-label="Toggle navigation"
+              onClick={() => setOpen((v) => !v)}
+            >
+              <span className="navbar-toggler-icon" />
+            </button>
+          </div>
 
           <div
             className={`collapse navbar-collapse ${open ? "show" : ""}`}
@@ -58,11 +99,9 @@ export default function NavBar() {
                 Catalog
               </Link>
               {user?.role === "buyer" && (
-                <>
-                  <Link className="nav-link" href="/orders" onClick={closeMenu}>
-                    Orders
-                  </Link>
-                </>
+                <Link className="nav-link" href="/orders" onClick={closeMenu}>
+                  Orders
+                </Link>
               )}
               {user?.role === "seller" && (
                 <>
@@ -84,51 +123,26 @@ export default function NavBar() {
               )}
             </div>
 
-            <div className="d-flex flex-column flex-lg-row align-items-lg-center gap-2 ms-lg-auto">
+            <div className="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 ms-lg-auto navbar-actions">
               {user?.role === "buyer" && (
-                <Link
-                  className="nav-link cart-link"
-                  href="/cart"
+                <CartLink
+                  cartCount={cartCount}
                   onClick={closeMenu}
-                  aria-label={`Cart, ${cartCount} items`}
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M6 6h15l-1.5 9h-12L6 6zm0 0L5 3H2"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <circle cx="9" cy="20" r="1.2" fill="currentColor" />
-                    <circle cx="18" cy="20" r="1.2" fill="currentColor" />
-                  </svg>
-                  <span>Cart</span>
-
-
-                  {cartCount > 0 && (
-                    <span className="cart-badge">{cartCount}</span>
-                  )}
-                </Link>
+                  className="cart-link--desktop"
+                />
               )}
 
               {!loading && !user && (
                 <>
                   <Link
-                    className="btn btn-outline-primary btn-sm"
+                    className="btn btn-outline-primary btn-touch"
                     href="/login"
                     onClick={closeMenu}
                   >
                     Log in
                   </Link>
                   <Link
-                    className="btn btn-primary btn-sm"
+                    className="btn btn-primary btn-touch"
                     href="/signup"
                     onClick={closeMenu}
                   >
@@ -140,17 +154,16 @@ export default function NavBar() {
               {user && (
                 <>
                   <div className="user-chip">
-                    <strong>{user.email}</strong>
+                    <strong title={user.email}>{user.email}</strong>
                     <span>{user.role}</span>
                   </div>
                   <Button
                     variant="outline-secondary"
-                    className="btn-sm"
+                    className="btn-touch"
                     type="button"
                     onClick={async () => {
                       closeMenu();
-                      await logout();
-                      router.push("/");
+                      await logout({ redirectTo: "/" });
                     }}
                   >
                     Log out

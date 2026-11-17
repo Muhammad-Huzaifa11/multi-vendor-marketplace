@@ -1,10 +1,18 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { api, formatMoney, type Product } from "@/lib/api";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { api, type Product } from "@/lib/api";
+import { formatMoney, soldByLabel } from "@/lib/format";
 import { addToCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
-import { EmptyState, ErrorState, LoadingState } from "@/components/StateMessage";
+import {
+  Button,
+  CatalogSkeleton,
+  EmptyState,
+  ErrorState,
+  ProductImage,
+  useToast,
+} from "@/components/ui";
 
 type Meta = {
   page: number;
@@ -13,8 +21,16 @@ type Meta = {
   total_pages: number;
 };
 
+function stockLabel(stock: number) {
+  if (stock <= 0) return { text: "Out of stock", className: "stock-out" };
+  if (stock <= 5)
+    return { text: `Only ${stock} left`, className: "stock-low" };
+  return { text: `${stock} in stock`, className: "stock-ok" };
+}
+
 export default function CatalogPage() {
   const { user } = useAuth();
+  const { pushToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [q, setQ] = useState("");
@@ -23,11 +39,10 @@ export default function CatalogPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load(attempt = 1) {
+  const load = useCallback(
+    async (attempt = 1) => {
       setLoading(true);
       setError(null);
       try {
@@ -41,26 +56,24 @@ export default function CatalogPage() {
         const data = await api<{ products: Product[]; meta: Meta }>(
           `/products?${params}`
         );
-        if (!cancelled) {
-          setProducts(data.products);
-          setMeta(data.meta);
-        }
+        setProducts(data.products);
+        setMeta(data.meta);
       } catch (e) {
-        // First catalog fetch can race a booting/reloading API — retry once.
-        if (!cancelled && attempt < 2) {
+        if (attempt < 2) {
           await new Promise((r) => setTimeout(r, 400));
-          if (!cancelled) return load(attempt + 1);
+          return load(attempt + 1);
         }
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
+        setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    }
+    },
+    [q, category, sort, page]
+  );
+
+  useEffect(() => {
     load();
-    return () => {
-      cancelled = true;
-    };
-  }, [q, category, sort, page]);
+  }, [load, reloadToken]);
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -74,11 +87,11 @@ export default function CatalogPage() {
 
   function handleAdd(product: Product) {
     if (user?.role !== "buyer") {
-      setMessage("Log in as a buyer to add items to your cart.");
+      pushToast("Log in as a buyer to add items to your cart.", "info");
       return;
     }
     if (product.stock < 1) {
-      setMessage("Out of stock.");
+      pushToast("Out of stock.", "error");
       return;
     }
     addToCart({
@@ -86,30 +99,65 @@ export default function CatalogPage() {
       title: product.title,
       price_cents: product.price_cents,
       quantity: 1,
-      seller_name: product.seller?.store_name,
+      seller_id: product.seller?.id,
+      seller_name:
+        product.seller?.store_name?.trim() ||
+        (product.seller?.id ? `Seller ${product.seller.id}` : "Marketplace seller"),
       image_url: product.image_url,
+      stock: product.stock,
     });
-    setMessage(`Added “${product.title}” to cart.`);
+
+    pushToast(`Added “${product.title}” to cart`, "success");
   }
 
   const canBuy = user?.role === "buyer";
-
+  const pageNumbers =
+    meta && meta.total_pages > 0
+      ? Array.from({ length: meta.total_pages }, (_, i) => i + 1).slice(
+          Math.max(0, page - 3),
+          Math.max(0, page - 3) + 5
+        )
+      : [];
 
   return (
     <div>
-      <h1 className="h3 mb-3">Catalog</h1>
+      <div className="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-3">
+        <div>
+          <h1 className="page-title mb-1">Catalog</h1>
+          <p className="text-muted mb-0">
+            Browse products from multiple sellers in one place.
+          </p>
+        </div>
+        {meta && !loading && !error && (
+          <div className="text-muted small">
+            {meta.total} result{meta.total === 1 ? "" : "s"}
+          </div>
+        )}
+      </div>
 
-      <form className="row g-2 mb-4" onSubmit={onSearch}>
+      <form className="filter-bar row g-2 align-items-end" onSubmit={onSearch}>
         <div className="col-md-4">
+          <label className="form-label" htmlFor="catalog-q">
+            Search
+          </label>
           <input
+            id="catalog-q"
             name="q"
             className="form-control"
-            placeholder="Search title"
+            placeholder="Search by title"
             defaultValue={q}
           />
         </div>
         <div className="col-md-3">
-          <select name="category" className="form-select" defaultValue={category}>
+          <label className="form-label" htmlFor="catalog-category">
+            Category
+          </label>
+          <select
+            id="catalog-category"
+            name="category"
+            className="form-select"
+            defaultValue={category}
+          >
             <option value="">All categories</option>
             {["Home", "Office", "Electronics", "Fashion", "Food", "Sports"].map(
               (c) => (
@@ -121,89 +169,122 @@ export default function CatalogPage() {
           </select>
         </div>
         <div className="col-md-3">
-          <select name="sort" className="form-select" defaultValue={sort}>
+          <label className="form-label" htmlFor="catalog-sort">
+            Sort
+          </label>
+          <select
+            id="catalog-sort"
+            name="sort"
+            className="form-select"
+            defaultValue={sort}
+          >
             <option value="price_asc">Price: low to high</option>
             <option value="price_desc">Price: high to low</option>
           </select>
         </div>
         <div className="col-md-2">
-          <button className="btn btn-primary w-100" type="submit">
+          <Button className="w-100" type="submit">
             Apply
-          </button>
+          </Button>
         </div>
       </form>
 
-      {message && <div className="alert alert-info">{message}</div>}
-      {loading && <LoadingState />}
-      {error && <ErrorState message={error} />}
+      {loading && <CatalogSkeleton />}
+      {error && (
+        <ErrorState
+          message={error}
+          onRetry={() => setReloadToken((n) => n + 1)}
+        />
+      )}
       {!loading && !error && products.length === 0 && (
-        <EmptyState label="No products match your filters." />
+        <EmptyState
+          title="No products match your filters"
+          description="Try clearing search or picking another category."
+          actionHref="/"
+          actionLabel="Reset catalog"
+        />
       )}
 
-      <div className="row g-3">
-        {products.map((product) => (
-          <div className="col-sm-6 col-lg-4" key={product.id}>
-            <div className="card product-card shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={
-                  product.image_url ||
-                  "https://placehold.co/400x400/e9ecef/495057/png?text=Product"
-                }
-                alt={product.title}
-              />
-              <div className="card-body d-flex flex-column">
-                <h2 className="h6 card-title">{product.title}</h2>
-                <p className="card-text small text-muted mb-1">
-                  {product.category} · {product.seller?.store_name}
-                </p>
-                <p className="fw-semibold mb-1">{formatMoney(product.price_cents)}</p>
-                <p className="small mb-3">Stock: {product.stock}</p>
-                {canBuy ? (
-                  <button
-                    className="btn btn-outline-primary mt-auto"
-                    type="button"
-                    disabled={product.stock < 1}
-                    onClick={() => handleAdd(product)}
-                  >
-                    Add to cart
-                  </button>
-                ) : (
-                  <p className="small text-muted mt-auto mb-0">
-                    {user?.role === "seller"
-                      ? "Switch to a buyer account to purchase."
-                      : "Log in as a buyer to add to cart."}
+      {!loading && !error && products.length > 0 && (
+        <div className="product-grid">
+          {products.map((product) => {
+            const stock = stockLabel(product.stock);
+            return (
+              <article className="product-card" key={product.id}>
+                <div className="product-card__media">
+                  <ProductImage src={product.image_url} alt={product.title} />
+                </div>
+                <div className="product-card__body">
+                  <div className="d-flex gap-2 flex-wrap">
+                    <span className="chip">{product.category}</span>
+                    <span className="chip">{soldByLabel(product.seller)}</span>
+                  </div>
+                  <h2 className="product-card__title">{product.title}</h2>
+                  <p className="product-card__price">
+                    {formatMoney(product.price_cents)}
                   </p>
-                )}
-              </div>
+                  <p className={`${stock.className} mb-2`}>{stock.text}</p>
+                  {canBuy ? (
+                    <Button
+                      variant="outline-primary"
+                      className="mt-auto"
+                      type="button"
+                      disabled={product.stock < 1}
+                      onClick={() => handleAdd(product)}
+                    >
+                      Add to cart
+                    </Button>
+                  ) : (
+                    <p className="small text-muted mt-auto mb-0">
+                      {user?.role === "seller"
+                        ? "Switch to a buyer account to purchase."
+                        : "Log in as a buyer to add to cart."}
+                    </p>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {meta && meta.total_pages > 1 && (
-        <div className="d-flex justify-content-between align-items-center mt-4">
-          <button
-            className="btn btn-outline-secondary"
+      {meta && meta.total_pages > 1 && !loading && !error && (
+        <nav
+          className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4"
+          aria-label="Catalog pagination"
+        >
+          <Button
+            variant="outline-secondary"
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
           >
             Previous
-          </button>
-          <span className="text-muted small">
-            Page {meta.page} of {meta.total_pages} ({meta.total} items)
-          </span>
-          <button
-            className="btn btn-outline-secondary"
+          </Button>
+          <div className="d-flex gap-1 flex-wrap">
+            {pageNumbers.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`btn btn-sm ${
+                  n === page ? "btn-primary" : "btn-outline-secondary"
+                }`}
+                aria-current={n === page ? "page" : undefined}
+                onClick={() => setPage(n)}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <Button
+            variant="outline-secondary"
             type="button"
             disabled={page >= meta.total_pages}
             onClick={() => setPage((p) => p + 1)}
           >
             Next
-          </button>
-        </div>
+          </Button>
+        </nav>
       )}
     </div>
   );

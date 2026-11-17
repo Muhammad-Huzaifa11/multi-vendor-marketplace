@@ -102,10 +102,7 @@ function OrdersContent() {
               </div>
               <ul className="list-group list-group-flush">
                 {order.items.map((item) => (
-                  <li
-                    className="list-group-item px-0 d-flex justify-content-between gap-2"
-                    key={item.id}
-                  >
+                  <li className="list-group-item px-0 order-line" key={item.id}>
                     <span>
                       {item.title} × {item.quantity}{" "}
                       {item.shipped && <StatusBadge status="shipped" />}

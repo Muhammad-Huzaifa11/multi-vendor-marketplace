@@ -115,10 +115,7 @@ export default function SellerOrdersPage() {
               </div>
               <ul className="list-group list-group-flush">
                 {order.items.map((item) => (
-                  <li
-                    className="list-group-item px-0 d-flex justify-content-between align-items-center gap-2"
-                    key={item.id}
-                  >
+                  <li className="list-group-item px-0 order-line" key={item.id}>
                     <span>
                       {item.title} × {item.quantity} @{" "}
                       {formatMoney(item.unit_price_cents)}
@@ -128,7 +125,7 @@ export default function SellerOrdersPage() {
                     ) : (
                       <Button
                         variant="outline-primary"
-                        className="btn-sm"
+                        className="btn-touch"
                         type="button"
                         disabled={busyId === item.id}
                         onClick={() => shipItem(item.id)}

@@ -70,16 +70,13 @@ export default function CartPage() {
           <div className="vstack gap-3">
             {items.map((item) => (
               <SurfaceCard key={item.product_id} className="p-3">
-                <div className="d-flex gap-3 align-items-start">
-                  <div
-                    className="product-card__media rounded"
-                    style={{ width: 96, flex: "0 0 96px" }}
-                  >
+                <div className="cart-line">
+                  <div className="cart-line__media">
                     <ProductImage src={item.image_url} alt={item.title} />
                   </div>
-                  <div className="flex-grow-1">
+                  <div className="cart-line__body">
                     <div className="d-flex justify-content-between gap-2 flex-wrap">
-                      <div>
+                      <div className="min-w-0">
                         <h2 className="h6 mb-1">{item.title}</h2>
                         <div className="small text-muted">
                           {item.seller_name || "Marketplace seller"}
@@ -89,8 +86,11 @@ export default function CartPage() {
                         {formatMoney(item.price_cents * item.quantity)}
                       </div>
                     </div>
-                    <div className="d-flex align-items-center gap-3 mt-3 flex-wrap">
-                      <div className="qty-stepper" aria-label={`Quantity for ${item.title}`}>
+                    <div className="cart-line__actions">
+                      <div
+                        className="qty-stepper"
+                        aria-label={`Quantity for ${item.title}`}
+                      >
                         <button
                           type="button"
                           aria-label="Decrease quantity"
@@ -117,7 +117,7 @@ export default function CartPage() {
                       </div>
                       <Button
                         variant="outline-danger"
-                        className="btn-sm"
+                        className="btn-touch"
                         type="button"
                         onClick={() => removeFromCart(item.product_id)}
                       >

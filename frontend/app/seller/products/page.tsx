@@ -224,7 +224,7 @@ export default function SellerProductsPage() {
                       {p.active !== false ? (
                         <Button
                           variant="outline-danger"
-                          className="btn-sm"
+                          className="btn-touch"
                           type="button"
                           onClick={() => archive(p.id)}
                         >
@@ -233,7 +233,7 @@ export default function SellerProductsPage() {
                       ) : (
                         <Button
                           variant="outline-secondary"
-                          className="btn-sm"
+                          className="btn-touch"
                           type="button"
                           onClick={() => restore(p.id)}
                         >
@@ -254,7 +254,7 @@ export default function SellerProductsPage() {
                 className={`p-3 ${p.active === false ? "muted-row" : ""}`}
               >
                 <div className="d-flex justify-content-between gap-2 mb-2">
-                  <h2 className="h6 mb-0">{p.title}</h2>
+                  <h2 className="h6 mb-0 text-break">{p.title}</h2>
                   {p.active === false ? (
                     <StatusBadge status="archived" />
                   ) : (
@@ -267,7 +267,7 @@ export default function SellerProductsPage() {
                 {p.active !== false ? (
                   <Button
                     variant="outline-danger"
-                    className="btn-sm"
+                    className="btn-touch"
                     type="button"
                     onClick={() => archive(p.id)}
                   >
@@ -276,7 +276,7 @@ export default function SellerProductsPage() {
                 ) : (
                   <Button
                     variant="outline-secondary"
-                    className="btn-sm"
+                    className="btn-touch"
                     type="button"
                     onClick={() => restore(p.id)}
                   >

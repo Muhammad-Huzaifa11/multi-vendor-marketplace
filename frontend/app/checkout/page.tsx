@@ -137,14 +137,17 @@ export default function CheckoutPage() {
         <div className="d-flex gap-2 flex-wrap">
           <Button
             variant="success"
-            className="btn-lg"
+            className="btn-lg btn-touch flex-grow-1 flex-sm-grow-0"
             type="button"
             disabled={paying}
             onClick={pay}
           >
             {paying ? "Processing…" : "Pay now"}
           </Button>
-          <Link className="btn btn-outline-secondary btn-lg" href="/cart">
+          <Link
+            className="btn btn-outline-secondary btn-lg btn-touch flex-grow-1 flex-sm-grow-0"
+            href="/cart"
+          >
             Back to cart
           </Link>
         </div>

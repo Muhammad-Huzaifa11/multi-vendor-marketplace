@@ -67,11 +67,27 @@ export default function SellerOrdersPage() {
               <div className="card-body">
                 <div className="d-flex justify-content-between flex-wrap gap-2 mb-2">
                   <div>
-                    <h2 className="h6 mb-1">Order #{order.id}</h2>
+                    <h2 className="h6 mb-1">
+                      Order #{order.id}{" "}
+                      <span
+                        className={`badge ${
+                          order.status === "shipped"
+                            ? "text-bg-success"
+                            : order.status === "partially_shipped"
+                              ? "text-bg-info"
+                              : "text-bg-secondary"
+                        }`}
+                      >
+                        {order.status.replaceAll("_", " ")}
+                      </span>
+                    </h2>
                     <div className="small text-muted">
-                      Buyer: {order.buyer?.email} ·{" "}
-                      <span className="badge text-bg-secondary">{order.status}</span>
+                      Buyer: {order.buyer?.email}
+                      {order.created_at
+                        ? ` · ${new Date(order.created_at).toLocaleString()}`
+                        : ""}
                     </div>
+
                   </div>
                   <div className="text-end small">
                     <div>Subtotal {formatMoney(order.subtotal_cents)}</div>

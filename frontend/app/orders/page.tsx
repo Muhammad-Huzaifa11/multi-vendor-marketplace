@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { api, formatMoney, type Order } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { EmptyState, ErrorState, LoadingState } from "@/components/StateMessage";
-import { Suspense } from "react";
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case "shipped":
+      return "text-bg-success";
+    case "partially_shipped":
+      return "text-bg-info";
+    default:
+      return "text-bg-secondary";
+  }
+}
+
+function formatDate(value?: string): string {
+  if (!value) return "";
+  return new Date(value).toLocaleString();
+}
 
 function OrdersContent() {
   const { user, loading: authLoading } = useAuth();
@@ -63,14 +78,21 @@ function OrdersContent() {
               <div className="card-body">
                 <div className="d-flex justify-content-between flex-wrap gap-2">
                   <div>
-                    <h2 className="h6 mb-1">Order #{order.id}</h2>
+                    <h2 className="h6 mb-1">
+                      Order #{order.id}{" "}
+                      <span className={`badge ${statusBadgeClass(order.status)}`}>
+                        {order.status.replaceAll("_", " ")}
+                      </span>
+                    </h2>
                     <div className="small text-muted">
-                      Seller: {order.seller?.email} · Status:{" "}
-                      <span className="badge text-bg-secondary">{order.status}</span>
+                      {order.seller?.store_name}
+                      {order.created_at ? ` · ${formatDate(order.created_at)}` : ""}
                     </div>
                   </div>
                   <div className="text-end small">
-                    <div>Subtotal {formatMoney(order.subtotal_cents)}</div>
+                    <div className="fw-semibold">
+                      Total {formatMoney(order.subtotal_cents)}
+                    </div>
                   </div>
                 </div>
                 <ul className="list-group list-group-flush mt-3">
@@ -81,10 +103,8 @@ function OrdersContent() {
                     >
                       <span>
                         {item.title} × {item.quantity}
-                        {item.shipped ? (
+                        {item.shipped && (
                           <span className="badge text-bg-success ms-2">Shipped</span>
-                        ) : (
-                          <span className="badge text-bg-warning ms-2">Pending</span>
                         )}
                       </span>
                       <span>{formatMoney(item.unit_price_cents * item.quantity)}</span>

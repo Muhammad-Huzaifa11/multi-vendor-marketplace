@@ -58,6 +58,17 @@ export default function LoginPage() {
             {submitting ? "Signing in…" : "Log in"}
           </button>
         </form>
+        <div className="alert alert-light border mt-3 small mb-0">
+          <div className="fw-semibold mb-1">Demo accounts (password: <code>password</code>)</div>
+          <ul className="mb-0 ps-3">
+            <li>
+              Buyer: <code>buyer@example.com</code>
+            </li>
+            <li>
+              Seller: <code>seller1@example.com</code> / <code>seller2@example.com</code>
+            </li>
+          </ul>
+        </div>
         <p className="mt-3 small">
           No account? <Link href="/signup">Sign up</Link>
         </p>

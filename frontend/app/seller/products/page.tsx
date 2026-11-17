@@ -74,6 +74,15 @@ export default function SellerProductsPage() {
     await load();
   }
 
+  async function restore(id: number) {
+    await api(`/seller/products/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ active: true }),
+    });
+    await load();
+  }
+
+
   if (authLoading || loading) return <LoadingState />;
   if (!user || user.role !== "seller") {
     return <EmptyState label="Seller access required." />;
@@ -161,7 +170,7 @@ export default function SellerProductsPage() {
                   <td>{p.category}</td>
                   <td>{p.active === false ? "No" : "Yes"}</td>
                   <td className="text-end">
-                    {p.active !== false && (
+                    {p.active !== false ? (
                       <button
                         className="btn btn-sm btn-outline-danger"
                         type="button"
@@ -169,8 +178,17 @@ export default function SellerProductsPage() {
                       >
                         Archive
                       </button>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-outline-secondary"
+                        type="button"
+                        onClick={() => restore(p.id)}
+                      >
+                        Restore
+                      </button>
                     )}
                   </td>
+
                 </tr>
               ))}
             </tbody>

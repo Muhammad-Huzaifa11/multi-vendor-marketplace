@@ -12,7 +12,8 @@ module Api
     def order_json(order)
       {
         id: order.id,
-        seller: { id: order.seller_id, email: order.seller.email },
+        seller: { id: order.seller_id, store_name: order.seller.display_name },
+
         subtotal_cents: order.subtotal_cents,
         commission_cents: order.commission_cents,
         seller_earnings_cents: order.seller_earnings_cents,

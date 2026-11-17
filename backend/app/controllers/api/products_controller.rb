@@ -40,7 +40,11 @@ module Api
         stock: product.stock,
         image_url: product.image_url,
         category: product.category,
-        seller: { id: product.seller_id, email: product.seller.email }
+        seller: {
+          id: product.seller_id,
+          store_name: product.seller.display_name
+        }
+
       }
     end
   end

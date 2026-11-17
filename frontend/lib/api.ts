@@ -12,10 +12,11 @@ export type Product = {
   image_url: string | null;
   category: string;
   active?: boolean;
-  seller?: { id: number; email: string };
+  seller?: { id: number; store_name: string };
 };
 
 export type OrderItem = {
+
   id: number;
   product_id: number;
   title: string;
@@ -31,10 +32,11 @@ export type Order = {
   seller_earnings_cents: number;
   status: string;
   created_at?: string;
-  seller?: { id: number; email: string };
+  seller?: { id: number; store_name: string };
   buyer?: { id: number; email: string };
   items: OrderItem[];
 };
+
 
 export class ApiError extends Error {
   status: number;

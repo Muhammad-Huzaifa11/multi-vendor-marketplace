@@ -81,11 +81,14 @@ export default function CatalogPage() {
       title: product.title,
       price_cents: product.price_cents,
       quantity: 1,
-      seller_email: product.seller?.email,
+      seller_name: product.seller?.store_name,
       image_url: product.image_url,
     });
     setMessage(`Added “${product.title}” to cart.`);
   }
+
+  const canBuy = user?.role === "buyer";
+
 
   return (
     <div>
@@ -138,25 +141,37 @@ export default function CatalogPage() {
             <div className="card product-card shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={product.image_url || "https://picsum.photos/seed/fallback/400"}
+                src={
+                  product.image_url ||
+                  "https://placehold.co/400x400/e9ecef/495057/png?text=Product"
+                }
                 alt={product.title}
               />
               <div className="card-body d-flex flex-column">
                 <h2 className="h6 card-title">{product.title}</h2>
                 <p className="card-text small text-muted mb-1">
-                  {product.category} · {product.seller?.email}
+                  {product.category} · {product.seller?.store_name}
                 </p>
                 <p className="fw-semibold mb-1">{formatMoney(product.price_cents)}</p>
                 <p className="small mb-3">Stock: {product.stock}</p>
-                <button
-                  className="btn btn-outline-primary mt-auto"
-                  type="button"
-                  disabled={product.stock < 1}
-                  onClick={() => handleAdd(product)}
-                >
-                  Add to cart
-                </button>
+                {canBuy ? (
+                  <button
+                    className="btn btn-outline-primary mt-auto"
+                    type="button"
+                    disabled={product.stock < 1}
+                    onClick={() => handleAdd(product)}
+                  >
+                    Add to cart
+                  </button>
+                ) : (
+                  <p className="small text-muted mt-auto mb-0">
+                    {user?.role === "seller"
+                      ? "Switch to a buyer account to purchase."
+                      : "Log in as a buyer to add to cart."}
+                  </p>
+                )}
               </div>
+
             </div>
           </div>
         ))}

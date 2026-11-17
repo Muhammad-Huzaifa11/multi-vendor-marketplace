@@ -84,7 +84,8 @@ export default function CheckoutPage() {
             >
               <span>
                 {item.title} × {item.quantity}
-                <span className="text-muted small d-block">{item.seller_email}</span>
+                <span className="text-muted small d-block">{item.seller_name}</span>
+
               </span>
               <span>{formatMoney(item.price_cents * item.quantity)}</span>
             </li>

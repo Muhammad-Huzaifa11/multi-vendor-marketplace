@@ -33,7 +33,9 @@ export default function SignupPage() {
           password,
           password_confirmation: passwordConfirmation,
           role: form.get("role"),
+          store_name: form.get("store_name") || undefined,
         }),
+
       });
       await refresh();
       router.push(data.user.role === "seller" ? "/seller/products" : "/");
@@ -90,7 +92,16 @@ export default function SignupPage() {
               <option value="seller">Seller</option>
             </select>
           </div>
+          <div className="mb-3">
+            <label className="form-label">Store name (sellers)</label>
+            <input
+              name="store_name"
+              className="form-control"
+              placeholder="Shown on your products instead of your email"
+            />
+          </div>
           <button className="btn btn-primary" type="submit" disabled={submitting}>
+
             {submitting ? "Creating…" : "Create account"}
           </button>
         </form>

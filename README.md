@@ -15,12 +15,17 @@ First boot runs migrations and seeds automatically.
 
 ## Test logins
 
-| Email | Password | Role |
-|-------|----------|------|
-| `buyer@example.com` | `password` | buyer |
-| `buyer2@example.com` | `password` | buyer |
-| `seller1@example.com` | `password` | seller |
-| `seller2@example.com` | `password` | seller |
+Also shown on the login page. Password for all: `password`.
+
+| Email | Role | Store name |
+|-------|------|------------|
+| `buyer@example.com` | buyer | — |
+| `buyer2@example.com` | buyer | — |
+| `seller1@example.com` | seller | Northside Goods |
+| `seller2@example.com` | seller | River Market |
+
+Demo oversell SKUs (kept active with stock 1 on every seed): **Last Unit Headphones**, **Single Stock Tee**.
+
 
 ## Run tests
 
@@ -48,7 +53,8 @@ docker compose exec backend bundle exec rspec
 
 ## What we cut
 
-Real payments, image upload, emails, admin, refunds, server-side carts, production multi-stage images, and “sellers can’t buy their own products.”
+Real payments, image upload, emails, admin, refunds, server-side carts, production multi-stage images, full product edit forms (archive/restore is supported), and “sellers can’t buy their own products” (sellers simply don’t see Add to cart).
+
 
 ## What we’d do next
 

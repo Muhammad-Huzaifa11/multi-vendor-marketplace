@@ -3,7 +3,8 @@ export type CartItem = {
   title: string;
   price_cents: number;
   quantity: number;
-  seller_email?: string;
+  seller_name?: string;
+
   image_url?: string | null;
 };
 

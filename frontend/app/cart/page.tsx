@@ -21,7 +21,12 @@ export default function CartPage() {
   if (authLoading) return <LoadingState />;
   if (!user || user.role !== "buyer") {
     return (
-      <EmptyState label="Log in as a buyer to view your cart." />
+      <div>
+        <EmptyState label="Log in as a buyer to view your cart." />
+        <Link className="btn btn-outline-primary" href="/login">
+          Log in
+        </Link>
+      </div>
     );
   }
 
@@ -31,7 +36,12 @@ export default function CartPage() {
     <div>
       <h1 className="h3 mb-3">Cart</h1>
       {items.length === 0 ? (
-        <EmptyState label="Your cart is empty." />
+        <div>
+          <EmptyState label="Your cart is empty." />
+          <Link className="btn btn-primary" href="/">
+            Browse catalog
+          </Link>
+        </div>
       ) : (
         <>
           <div className="table-responsive card shadow-sm">
@@ -49,7 +59,7 @@ export default function CartPage() {
                 {items.map((item) => (
                   <tr key={item.product_id}>
                     <td>{item.title}</td>
-                    <td className="small text-muted">{item.seller_email}</td>
+                    <td className="small text-muted">{item.seller_name}</td>
                     <td>{formatMoney(item.price_cents)}</td>
                     <td style={{ maxWidth: 100 }}>
                       <input

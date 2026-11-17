@@ -22,7 +22,12 @@ class User < ApplicationRecord
     role == "seller"
   end
 
+  def display_name
+    store_name.presence || email.split("@").first
+  end
+
   private
+
 
   def normalize_email
     self.email = email.to_s.strip.downcase

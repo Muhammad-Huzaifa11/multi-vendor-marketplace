@@ -50,7 +50,12 @@ export default function SellerProductsPage() {
     e.preventDefault();
     setSaving(true);
     setFormError(null);
-    const form = new FormData(e.currentTarget);
+    // Capture before await — React nulls e.currentTarget after the handler yields.
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
+    const rawImage = String(form.get("image_url") || "").trim();
+    const imageUrl =
+      !rawImage || rawImage.toLowerCase() === "nil" ? null : rawImage;
     try {
       await api("/seller/products", {
         method: "POST",
@@ -59,10 +64,10 @@ export default function SellerProductsPage() {
           price_cents: Math.round(Number(form.get("price")) * 100),
           stock: Number(form.get("stock")),
           category: form.get("category"),
-          image_url: form.get("image_url"),
+          image_url: imageUrl,
         }),
       });
-      e.currentTarget.reset();
+      formEl.reset();
       pushToast("Product created", "success");
       await load();
     } catch (err) {

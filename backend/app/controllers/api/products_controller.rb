@@ -14,15 +14,20 @@ module Api
       total = scope.count
       products = scope.offset((page - 1) * per_page).limit(per_page)
 
+      # All active categories (unfiltered) so the buyer filter stays complete.
+      categories = Product.active.distinct.order(:category).pluck(:category)
+
       render json: {
         products: products.map { |p| product_json(p) },
         meta: {
           page: page,
           per_page: per_page,
           total: total,
-          total_pages: (total.to_f / per_page).ceil
+          total_pages: (total.to_f / per_page).ceil,
+          categories: categories
         }
       }
+
     end
 
     def show

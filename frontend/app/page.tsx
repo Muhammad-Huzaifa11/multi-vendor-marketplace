@@ -19,7 +19,18 @@ type Meta = {
   per_page: number;
   total: number;
   total_pages: number;
+  categories?: string[];
 };
+
+const FALLBACK_CATEGORIES = [
+  "Home",
+  "Office",
+  "Electronics",
+  "Fashion",
+  "Food",
+  "Sports",
+];
+
 
 function stockLabel(stock: number) {
   if (stock <= 0) return { text: "Out of stock", className: "stock-out" };
@@ -157,16 +168,19 @@ export default function CatalogPage() {
             name="category"
             className="form-select"
             defaultValue={category}
+            key={`categories-${(meta?.categories || FALLBACK_CATEGORIES).join("|")}-${category}`}
           >
             <option value="">All categories</option>
-            {["Home", "Office", "Electronics", "Fashion", "Food", "Sports"].map(
-              (c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              )
-            )}
+            {(meta?.categories?.length
+              ? meta.categories
+              : FALLBACK_CATEGORIES
+            ).map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
+
         </div>
         <div className="col-md-3">
           <label className="form-label" htmlFor="catalog-sort">

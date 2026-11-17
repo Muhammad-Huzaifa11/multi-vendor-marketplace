@@ -196,8 +196,8 @@ export default function CatalogPage() {
             <option value="price_desc">Price: high to low</option>
           </select>
         </div>
-        <div className="col-md-2">
-          <Button className="w-100" type="submit">
+        <div className="col-12 col-md-2">
+          <Button className="w-100 btn-touch" type="submit">
             Apply
           </Button>
         </div>
@@ -269,6 +269,7 @@ export default function CatalogPage() {
         >
           <Button
             variant="outline-secondary"
+            className="btn-touch"
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
@@ -280,7 +281,7 @@ export default function CatalogPage() {
               <button
                 key={n}
                 type="button"
-                className={`btn btn-sm ${
+                className={`btn pagination-btn ${
                   n === page ? "btn-primary" : "btn-outline-secondary"
                 }`}
                 aria-current={n === page ? "page" : undefined}
@@ -292,6 +293,7 @@ export default function CatalogPage() {
           </div>
           <Button
             variant="outline-secondary"
+            className="btn-touch"
             type="button"
             disabled={page >= meta.total_pages}
             onClick={() => setPage((p) => p + 1)}

@@ -1,0 +1,15 @@
+body {
+  background: #f6f7f9;
+  min-height: 100vh;
+}
+
+.product-card img {
+  object-fit: cover;
+  height: 160px;
+  width: 100%;
+  background: #e9ecef;
+}
+
+.product-card {
+  height: 100%;
+}

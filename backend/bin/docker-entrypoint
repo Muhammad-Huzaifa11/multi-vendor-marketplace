@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+bundle check || bundle install
+
+# db:prepare creates the DB if needed and runs migrations (safe to re-run).
+bundle exec rails db:prepare
+
+# Seeds are idempotent (find_or_create_by).
+bundle exec rails db:seed
+
+exec "$@"

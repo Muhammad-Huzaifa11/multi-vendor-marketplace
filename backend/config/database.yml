@@ -1,0 +1,24 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV.fetch("DATABASE_URL", nil) %>
+
+development:
+  <<: *default
+  database: marketplace_development
+  username: marketplace
+  password: marketplace
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+
+test:
+  <<: *default
+  database: marketplace_test
+  username: marketplace
+  password: marketplace
+  host: <%= ENV.fetch("DB_HOST", "localhost") %>
+  url: <%= ENV.fetch("DATABASE_URL", "").sub("marketplace_development", "marketplace_test").presence %>
+
+production:
+  <<: *default
+  database: marketplace_production

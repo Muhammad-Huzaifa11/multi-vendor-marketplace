@@ -1,0 +1,27 @@
+.env
+*.log
+.DS_Store
+.idea/
+.vscode/
+
+# Local take-home notes (not part of the deliverable app)
+/claude
+/summary
+/test
+
+
+# Backend
+backend/log/*
+backend/tmp/*
+backend/storage/*
+backend/vendor/bundle
+backend/.bundle
+backend/config/master.key
+!backend/log/.keep
+!backend/tmp/.keep
+
+# Frontend
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/.env*.local

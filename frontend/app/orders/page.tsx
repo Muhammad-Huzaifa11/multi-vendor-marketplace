@@ -102,12 +102,15 @@ function OrdersContent() {
               </div>
               <ul className="list-group list-group-flush">
                 {order.items.map((item) => (
-                  <li className="list-group-item px-0 order-line" key={item.id}>
-                    <span>
+                  <li
+                    className="list-group-item px-0 d-flex justify-content-between align-items-center gap-3 flex-wrap"
+                    key={item.id}
+                  >
+                    <span className="me-3 text-break">
                       {item.title} × {item.quantity}{" "}
                       {item.shipped && <StatusBadge status="shipped" />}
                     </span>
-                    <span>
+                    <span className="flex-shrink-0 ms-auto">
                       {formatMoney(item.unit_price_cents * item.quantity)}
                     </span>
                   </li>

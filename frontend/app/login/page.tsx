@@ -5,11 +5,12 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError, type User } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { ErrorState } from "@/components/StateMessage";
+import { Button, ErrorState, SurfaceCard, useToast } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
   const { refresh } = useAuth();
+  const { pushToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,6 +28,7 @@ export default function LoginPage() {
         }),
       });
       await refresh();
+      pushToast("Welcome back", "success");
       router.push(data.user.role === "seller" ? "/seller/products" : "/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed");
@@ -36,43 +38,62 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-5">
-        <h1 className="h3 mb-3">Log in</h1>
-        {error && <ErrorState message={error} />}
-        <form className="card card-body shadow-sm" onSubmit={onSubmit}>
+    <div className="auth-card">
+      <h1 className="page-title text-center">Log in</h1>
+      {error && <ErrorState message={error} />}
+      <SurfaceCard className="p-4">
+        <form onSubmit={onSubmit}>
           <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input name="email" type="email" className="form-control" required />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Password</label>
+            <label className="form-label" htmlFor="email">
+              Email
+            </label>
             <input
-              name="password"
-              type="password"
+              id="email"
+              name="email"
+              type="email"
               className="form-control"
+              autoComplete="email"
               required
             />
           </div>
-          <button className="btn btn-primary" type="submit" disabled={submitting}>
+          <div className="mb-3">
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              className="form-control"
+              autoComplete="current-password"
+              required
+            />
+          </div>
+          <Button className="w-100" type="submit" disabled={submitting}>
             {submitting ? "Signing in…" : "Log in"}
-          </button>
+          </Button>
         </form>
-        <div className="alert alert-light border mt-3 small mb-0">
-          <div className="fw-semibold mb-1">Demo accounts (password: <code>password</code>)</div>
-          <ul className="mb-0 ps-3">
-            <li>
-              Buyer: <code>buyer@example.com</code>
-            </li>
-            <li>
-              Seller: <code>seller1@example.com</code> / <code>seller2@example.com</code>
-            </li>
-          </ul>
-        </div>
-        <p className="mt-3 small">
-          No account? <Link href="/signup">Sign up</Link>
+      </SurfaceCard>
+
+      <SurfaceCard className="p-3 mt-3">
+        <div className="fw-semibold mb-2">Demo accounts</div>
+        <p className="small text-muted mb-2">
+          Password for all accounts: <code>password</code>
         </p>
-      </div>
+        <ul className="small mb-0 ps-3">
+          <li>
+            Buyer: <code>buyer@example.com</code>
+          </li>
+          <li>
+            Sellers: <code>seller1@example.com</code>,{" "}
+            <code>seller2@example.com</code>
+          </li>
+        </ul>
+      </SurfaceCard>
+
+      <p className="mt-3 small text-center">
+        No account? <Link href="/signup">Sign up</Link>
+      </p>
     </div>
   );
 }

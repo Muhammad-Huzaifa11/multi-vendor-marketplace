@@ -5,23 +5,26 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError, type User } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { ErrorState } from "@/components/StateMessage";
+import { Button, ErrorState, SurfaceCard, useToast } from "@/components/ui";
 
 export default function SignupPage() {
   const router = useRouter();
   const { refresh } = useAuth();
+  const { pushToast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setFieldError(null);
     const form = new FormData(e.currentTarget);
     const password = String(form.get("password"));
     const passwordConfirmation = String(form.get("password_confirmation"));
     if (password !== passwordConfirmation) {
-      setError("Passwords do not match");
+      setFieldError("Passwords do not match");
       setSubmitting(false);
       return;
     }
@@ -35,9 +38,9 @@ export default function SignupPage() {
           role: form.get("role"),
           store_name: form.get("store_name") || undefined,
         }),
-
       });
       await refresh();
+      pushToast("Account created", "success");
       router.push(data.user.role === "seller" ? "/seller/products" : "/");
     } catch (err) {
       const msg =
@@ -56,59 +59,83 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="row justify-content-center">
-      <div className="col-md-5">
-        <h1 className="h3 mb-3">Sign up</h1>
-        {error && <ErrorState message={error} />}
-        <form className="card card-body shadow-sm" onSubmit={onSubmit}>
+    <div className="auth-card">
+      <h1 className="page-title text-center">Sign up</h1>
+      {error && <ErrorState message={error} />}
+      <SurfaceCard className="p-4">
+        <form onSubmit={onSubmit}>
           <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input name="email" type="email" className="form-control" required />
+            <label className="form-label" htmlFor="email">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              className="form-control"
+              autoComplete="email"
+              required
+            />
           </div>
           <div className="mb-3">
-            <label className="form-label">Password</label>
+            <label className="form-label" htmlFor="password">
+              Password
+            </label>
             <input
+              id="password"
               name="password"
               type="password"
               className="form-control"
               minLength={6}
+              autoComplete="new-password"
               required
             />
           </div>
           <div className="mb-3">
-            <label className="form-label">Confirm password</label>
+            <label className="form-label" htmlFor="password_confirmation">
+              Confirm password
+            </label>
             <input
+              id="password_confirmation"
               name="password_confirmation"
               type="password"
-              className="form-control"
+              className={`form-control ${fieldError ? "is-invalid" : ""}`}
               minLength={6}
+              autoComplete="new-password"
               required
             />
+            {fieldError && (
+              <div className="invalid-feedback d-block">{fieldError}</div>
+            )}
           </div>
           <div className="mb-3">
-            <label className="form-label">Role</label>
-            <select name="role" className="form-select" defaultValue="buyer">
+            <label className="form-label" htmlFor="role">
+              Role
+            </label>
+            <select id="role" name="role" className="form-select" defaultValue="buyer">
               <option value="buyer">Buyer</option>
               <option value="seller">Seller</option>
             </select>
           </div>
           <div className="mb-3">
-            <label className="form-label">Store name (sellers)</label>
+            <label className="form-label" htmlFor="store_name">
+              Store name (sellers)
+            </label>
             <input
+              id="store_name"
               name="store_name"
               className="form-control"
               placeholder="Shown on your products instead of your email"
             />
           </div>
-          <button className="btn btn-primary" type="submit" disabled={submitting}>
-
+          <Button className="w-100" type="submit" disabled={submitting}>
             {submitting ? "Creating…" : "Create account"}
-          </button>
+          </Button>
         </form>
-        <p className="mt-3 small">
-          Already have an account? <Link href="/login">Log in</Link>
-        </p>
-      </div>
+      </SurfaceCard>
+      <p className="mt-3 small text-center">
+        Already have an account? <Link href="/login">Log in</Link>
+      </p>
     </div>
   );
 }

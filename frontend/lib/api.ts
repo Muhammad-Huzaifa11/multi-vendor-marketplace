@@ -81,6 +81,4 @@ export async function api<T>(
   return body as T;
 }
 
-export function formatMoney(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
-}
+export { formatMoney } from "./format";

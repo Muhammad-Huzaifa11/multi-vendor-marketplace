@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { readCart } from "@/lib/cart";
 import { Button } from "@/components/ui";
 
 export default function NavBar() {
+  const router = useRouter();
   const { user, loading, logout } = useAuth();
   const [cartCount, setCartCount] = useState(0);
   const [open, setOpen] = useState(false);
+
 
   useEffect(() => {
     const sync = () =>
@@ -144,9 +147,10 @@ export default function NavBar() {
                     variant="outline-secondary"
                     className="btn-sm"
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       closeMenu();
-                      logout();
+                      await logout();
+                      router.push("/");
                     }}
                   >
                     Log out

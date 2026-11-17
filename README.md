@@ -49,7 +49,6 @@ docker compose exec backend bundle exec rspec
 - **Auth** — `has_secure_password` + Rails cookie session (SameSite=Lax, HttpOnly). JSON Content-Type required on writes as a simple CSRF guard. Role checks via `require_seller!` / `require_buyer!`; data scoped to `current_user`.
 - **Per-item shipping** — sellers mark line items shipped; order status is derived (`pending` / `partially_shipped` / `shipped`).
 - **Archive products** — delete sets `active: false` so order history stays intact.
-- **Guidelines** — kept Rails best practices (thin controllers, `CheckoutService`, validations/scopes, RSpec, Bootstrap). Skipped Devise/CanCanCan/Stimulus/Turbo as unfit for this Next.js + API brief.
 
 ## What we cut
 

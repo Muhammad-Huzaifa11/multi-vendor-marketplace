@@ -1,16 +1,8 @@
 import type { NextConfig } from "next";
 
-const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
-
 const nextConfig: NextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
-  },
+  // API calls go through app/api/[...path]/route.ts (explicit proxy).
+  // That avoids flaky first-load rewrite races against a booting Rails app.
 };
 
 export default nextConfig;

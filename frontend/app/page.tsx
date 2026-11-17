@@ -27,7 +27,7 @@ export default function CatalogPage() {
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
+    async function load(attempt = 1) {
       setLoading(true);
       setError(null);
       try {
@@ -46,6 +46,11 @@ export default function CatalogPage() {
           setMeta(data.meta);
         }
       } catch (e) {
+        // First catalog fetch can race a booting/reloading API — retry once.
+        if (!cancelled && attempt < 2) {
+          await new Promise((r) => setTimeout(r, 400));
+          if (!cancelled) return load(attempt + 1);
+        }
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load");
       } finally {
         if (!cancelled) setLoading(false);
